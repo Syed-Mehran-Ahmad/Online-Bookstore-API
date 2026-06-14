@@ -3,31 +3,48 @@ require("dotenv").config();
 const express = require("express");
 const mongoose = require("mongoose");
 
-const booksRoute = require('./routes/books');
+const booksRoute = require("./routes/books");
 
 const app = express();
 
-// Middleware
+// Body Parser Middleware
 app.use(express.json());
 
-app.use('/books', booksRoute);
+// Request Logger Middleware
+app.use((req, res, next) => {
+    console.log(
+        `${req.method} ${req.originalUrl} - ${new Date().toLocaleString()}`
+    );
+    next();
+});
 
-// Test Route
+// Routes
+app.use("/books", booksRoute);
+
+// Home Route
 app.get("/", (req, res) => {
-  res.send("Online Bookstore API Running...");
+    res.send("Online Bookstore API Running...");
+});
+
+// Invalid Route Handler
+app.use((req, res) => {
+    res.status(404).json({
+        message: "Route not found"
+    });
 });
 
 // MongoDB Connection
-mongoose.connect(process.env.MONGO_URI, {
-  family: 4
-})
-  .then(() => {
-    console.log("MongoDB Connected");
+mongoose
+    .connect(process.env.MONGO_URI, {
+        family: 4
+    })
+    .then(() => {
+        console.log("MongoDB Connected");
 
-    app.listen(process.env.PORT, () => {
-      console.log(`Server Running on Port ${process.env.PORT}`);
+        app.listen(process.env.PORT, () => {
+            console.log(`Server Running on Port ${process.env.PORT}`);
+        });
+    })
+    .catch((err) => {
+        console.log(err);
     });
-  })
-  .catch((err) => {
-    console.log(err);
-  });
